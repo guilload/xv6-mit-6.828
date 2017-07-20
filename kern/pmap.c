@@ -317,11 +317,14 @@ page_alloc(int alloc_flags)
 // (This function should only be called when pp->pp_ref reaches 0.)
 //
 void
-page_free(struct PageInfo *pp)
+page_free(struct PageInfo *page)
 {
-	// Fill this function in
-	// Hint: You may want to panic if pp->pp_ref is nonzero or
-	// pp->pp_link is not NULL.
+	assert(page != NULL);
+	assert(page->pp_ref == 0);
+	assert(page->pp_link == NULL);
+
+	page->pp_link = page_free_list;
+	page_free_list = page;
 }
 
 //
