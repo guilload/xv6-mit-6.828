@@ -448,7 +448,22 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 int
 page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 {
-	// Fill this function in
+	pte_t *pt_entry;
+
+	if((pt_entry = pgdir_walk(pgdir, va, true)) == NULL) {
+		return -E_NO_MEM;
+	}
+
+	// the trick is to increment the ref count before calling page_remove()
+	pp->pp_ref++;
+
+	if (*pt_entry & PTE_P) {
+		page_remove(pgdir, va);
+	}
+
+	*pt_entry = page2pa(pp) | perm | PTE_P;
+	pgdir[PDX(va)] |= perm;
+
 	return 0;
 }
 
