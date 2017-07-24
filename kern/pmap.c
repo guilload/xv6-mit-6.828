@@ -357,14 +357,37 @@ page_decref(struct PageInfo* pp)
 // and the page table, so it's safe to leave permissions in the page
 // directory more permissive than strictly necessary.
 //
-// Hint 3: look at inc/mmu.h for useful macros that mainipulate page
+// Hint 3: look at inc/mmu.h for useful macros that manipulate page
 // table and page directory entries.
 //
 pte_t *
 pgdir_walk(pde_t *pgdir, const void *va, int create)
 {
-	// Fill this function in
-	return NULL;
+	int present;
+
+	pde_t *pd_entry;
+	pte_t *pgtable;
+
+	size_t pd_index, pt_index;
+	struct PageInfo *page = NULL;
+
+
+	pd_index = PDX(va);
+	pd_entry = pgdir + pd_index;
+	present = *pd_entry & PTE_P;
+
+	if (!present) {
+		if (!create) return NULL;
+
+		if((page = page_alloc(ALLOC_ZERO)) == NULL) return NULL;
+		page->pp_ref++;
+
+		*pd_entry = page2pa(page) | PTE_P;
+	}
+
+	pgtable = KADDR(PTE_ADDR(*pd_entry));
+	pt_index = PTX(va);
+	return pgtable + pt_index;
 }
 
 //
