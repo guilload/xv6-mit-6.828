@@ -507,7 +507,14 @@ page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 void
 page_remove(pde_t *pgdir, void *va)
 {
-	// Fill this function in
+	pte_t *pt_entry;
+	struct PageInfo *page;
+
+	if((page = page_lookup(pgdir, va, &pt_entry)) == NULL) return;
+
+	page_decref(page); // will free the page if necessary
+	*pt_entry = (pte_t) 0;
+	tlb_invalidate(pgdir, va);
 }
 
 //
