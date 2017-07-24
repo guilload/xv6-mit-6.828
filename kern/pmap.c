@@ -404,7 +404,20 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 static void
 boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
 {
-	// Fill this function in
+	pde_t *pd_entry;
+	pte_t *pt_entry;
+	void *address;
+
+	for (size_t i = 0; i < size; i += PGSIZE)
+	{
+    	address = (void *)(va + i);
+
+		pt_entry = pgdir_walk(pgdir, address, true);
+        *pt_entry = (pa + i) | perm | PTE_P;
+
+		pd_entry = pgdir + PDX(address);
+		*pd_entry |= perm | PTE_P;
+    }
 }
 
 //
