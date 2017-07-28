@@ -358,11 +358,36 @@ load_icode(struct Env *e, uint8_t *binary)
 	//  What?  (See env_run() and env_pop_tf() below.)
 
 	// LAB 3: Your code here.
+	struct Elf *elf = (struct Elf *) binary;
+
+	if (elf->e_magic != ELF_MAGIC)
+		panic("");
+
+	if (elf->e_entry == 0)
+		panic("");
+
+	e->env_tf.tf_eflags = elf->e_flags;
+	e->env_tf.tf_eip = elf->e_entry;
+
+	struct Proghdr *ph = (struct Proghdr *) (binary + elf->e_phoff);
+	struct Proghdr *eph = ph + elf->e_phnum;
+
+	lcr3(PADDR(e->env_pgdir));
+
+	for (; ph < eph; ph++) {
+		if (ph->p_type == ELF_PROG_LOAD) {
+			region_alloc(e, (void *) ph->p_va, ph->p_memsz);
+			memcpy((void *) ph->p_va, binary + ph->p_offset, ph->p_filesz);
+			memset((void *) (ph->p_va + ph->p_filesz), 0, ph->p_memsz - ph->p_filesz);
+		}
+	}
 
 	// Now map one page for the program's initial stack
 	// at virtual address USTACKTOP - PGSIZE.
 
 	// LAB 3: Your code here.
+	region_alloc(e, (void *) (USTACKTOP - PGSIZE), PGSIZE);
+	lcr3(PADDR(kern_pgdir));
 }
 
 //
