@@ -571,6 +571,20 @@ int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 {
 	// LAB 3: Your code here.
+	pte_t *pt_entry;
+
+	uintptr_t address = (uintptr_t) va;
+	uintptr_t start = ROUNDDOWN(address, PGSIZE);
+	uintptr_t end = address + len;
+
+	for (uintptr_t i = start; i < end; i += PGSIZE) {
+		if (i > ULIM ||
+			(pt_entry = pgdir_walk(env->env_pgdir, (void *) i, false)) == NULL ||
+			(*pt_entry & perm) != perm) {
+			user_mem_check_addr = (address > i) ? address : i;
+			return -E_FAULT;
+		}
+	}
 
 	return 0;
 }
@@ -585,7 +599,7 @@ user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 void
 user_mem_assert(struct Env *env, const void *va, size_t len, int perm)
 {
-	if (user_mem_check(env, va, len, perm | PTE_U) < 0) {
+	if (user_mem_check(env, va, len, perm | PTE_U | PTE_P) < 0) {
 		cprintf("[%08x] user_mem_check assertion failure for "
 			"va %08x\n", env->env_id, user_mem_check_addr);
 		env_destroy(env);	// may not return
