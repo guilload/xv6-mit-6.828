@@ -78,3 +78,14 @@ TRAPHANDLER_NOEC(trap_simderr, T_SIMDERR)	# SIMD floating point error
  * Lab 3: Your code here for _alltraps
  */
 
+_alltraps:
+	pushl 	%ds
+	pushl 	%es
+	pushal
+
+	movl 	$GD_KD, %eax
+	movw 	%ax, %ds
+	movw 	%ax, %es
+
+	pushl 	%esp
+	call 	trap
