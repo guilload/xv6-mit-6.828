@@ -34,6 +34,8 @@ extern void trap_align();
 extern void trap_mchk();
 extern void trap_simderr();
 
+extern void trap_syscall();
+
 void trap_init(void);
 void trap_init_percpu(void);
 void print_regs(struct PushRegs *regs);
